@@ -1,0 +1,11 @@
+command: ["streamlit", "run", "app.py"]
+
+env:
+  - name: "DATABRICKS_SERVER_HOSTNAME"
+    value: "dbc-6563e374-6e43.cloud.databricks.com"
+  - name: "DATABRICKS_WAREHOUSE_ID"
+    valueFrom: "sql_warehouse"
+  - name: "LLM_PROVIDER"
+    value: "none"
+  - name: "STREAMLIT_BROWSER_GATHER_USAGE_STATS"
+    value: "false"
