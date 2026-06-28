@@ -1,0 +1,1540 @@
+{
+  "datasets": [
+    {
+      "name": "executive_kpis",
+      "displayName": "Executive KPIs",
+      "queryLines": [
+        "SELECT\n",
+        "  SUM(cn_count + can_count) as total_notices,\n",
+        "  SUM(cn_count) as contract_notices,\n",
+        "  SUM(can_count) as award_notices,\n",
+        "  SUM(total_award_value_eur) as total_estimated_value\n",
+        "FROM\n",
+        "  daily_activity"
+      ],
+      "catalog": "workspace",
+      "schema": "gold"
+    },
+    {
+      "name": "daily_trends",
+      "displayName": "Daily Trends",
+      "queryLines": [
+        "SELECT\n",
+        "  activity_date,\n",
+        "  total_award_value_eur,\n",
+        "  cn_count + can_count as total_notices\n",
+        "FROM\n",
+        "  workspace.gold.daily_activity\n",
+        "WHERE\n",
+        "  activity_date >= '2026-05-01'\n",
+        "  AND total_award_value_eur IS NOT NULL\n",
+        "ORDER BY\n",
+        "  activity_date"
+      ]
+    },
+    {
+      "name": "buyers_by_country",
+      "displayName": "Buyers by Country",
+      "queryLines": [
+        "SELECT\n",
+        "  buyer_country,\n",
+        "  COUNT(DISTINCT buyer_name) as buyer_count,\n",
+        "  SUM(total_contracts) as notice_count,\n",
+        "  SUM(total_awarded_value_eur) as total_value\n",
+        "FROM\n",
+        "  workspace.gold.buyer_profiles\n",
+        "GROUP BY\n",
+        "  buyer_country\n",
+        "ORDER BY\n",
+        "  total_value DESC"
+      ]
+    },
+    {
+      "name": "cpv_categories",
+      "displayName": "CPV Categories Detail",
+      "queryLines": [
+        "SELECT\n",
+        "  CASE\n",
+        "    WHEN s.cpv_division = '45' THEN 'Construction'\n",
+        "    WHEN s.cpv_division = '71' THEN 'Engineering Services'\n",
+        "    WHEN s.cpv_division = '72' THEN 'IT Services'\n",
+        "    WHEN s.cpv_division = '79' THEN 'Business Services'\n",
+        "    WHEN s.cpv_division = '30' THEN 'Office & Computing'\n",
+        "    WHEN s.cpv_division = '33' THEN 'Medical Equipment'\n",
+        "    WHEN s.cpv_division = '34' THEN 'Transport Equipment'\n",
+        "    WHEN s.cpv_division = '50' THEN 'Repair & Maintenance'\n",
+        "    WHEN s.cpv_division = '60' THEN 'Transport Services'\n",
+        "    WHEN s.cpv_division = '80' THEN 'Education & Training'\n",
+        "    WHEN s.cpv_division = '85' THEN 'Health & Social Services'\n",
+        "    WHEN s.cpv_division = '90' THEN 'Waste & Cleaning'\n",
+        "    WHEN s.cpv_division = '09' THEN 'Energy & Utilities'\n",
+        "    WHEN s.cpv_division = '15' THEN 'Food & Beverages'\n",
+        "    WHEN s.cpv_division = '18' THEN 'Clothing & Textiles'\n",
+        "    WHEN s.cpv_division = '22' THEN 'Printed Materials'\n",
+        "    WHEN s.cpv_division = '24' THEN 'Chemicals'\n",
+        "    WHEN s.cpv_division = '39' THEN 'Furniture'\n",
+        "    WHEN s.cpv_division = '48' THEN 'Software'\n",
+        "    WHEN s.cpv_division = '55' THEN 'Hotel & Catering'\n",
+        "    WHEN s.cpv_division = '63' THEN 'Travel & Logistics'\n",
+        "    WHEN s.cpv_division = '64' THEN 'Postal Services'\n",
+        "    WHEN s.cpv_division = '66' THEN 'Financial Services'\n",
+        "    WHEN s.cpv_division = '70' THEN 'Real Estate'\n",
+        "    WHEN s.cpv_division = '73' THEN 'Research Services'\n",
+        "    WHEN s.cpv_division = '75' THEN 'Administration'\n",
+        "    WHEN s.cpv_division = '76' THEN 'Oil & Gas'\n",
+        "    WHEN s.cpv_division = '77' THEN 'Agricultural Services'\n",
+        "    WHEN s.cpv_division = '92' THEN 'Recreation & Culture'\n",
+        "    ELSE d.cpv_label\n",
+        "  END as sector_name,\n",
+        "  s.contract_count,\n",
+        "  s.total_award_value_eur as total_value,\n",
+        "  s.distinct_buyers\n",
+        "FROM\n",
+        "  workspace.gold.cpv_summary s\n",
+        "    LEFT JOIN workspace.gold.dim_cpv d\n",
+        "      ON s.cpv_division = d.cpv_division\n",
+        "ORDER BY\n",
+        "  s.total_award_value_eur DESC\n",
+        "LIMIT 20"
+      ]
+    },
+    {
+      "name": "high_value_awards",
+      "displayName": "High Value Awards",
+      "queryLines": [
+        "SELECT\n",
+        "  buyer_name,\n",
+        "  project_title,\n",
+        "  award_value_eur,\n",
+        "  buyer_country,\n",
+        "  publication_date\n",
+        "FROM\n",
+        "  workspace.gold.awards_analysis\n",
+        "WHERE\n",
+        "  award_value_eur IS NOT NULL\n",
+        "ORDER BY\n",
+        "  award_value_eur DESC\n",
+        "LIMIT 20"
+      ]
+    },
+    {
+      "name": "awards_by_procedure",
+      "displayName": "Awards by Procedure Type",
+      "queryLines": [
+        "SELECT\n",
+        "  procedure_type,\n",
+        "  COUNT(*) as award_count,\n",
+        "  SUM(award_value_eur) as total_value,\n",
+        "  AVG(award_value_eur) as avg_value\n",
+        "FROM\n",
+        "  workspace.gold.awards_analysis\n",
+        "WHERE\n",
+        "  award_value_eur IS NOT NULL\n",
+        "  AND procedure_type IS NOT NULL\n",
+        "  AND procedure_type != ''\n",
+        "GROUP BY\n",
+        "  procedure_type\n",
+        "ORDER BY\n",
+        "  total_value DESC"
+      ]
+    },
+    {
+      "name": "cpv_by_count",
+      "displayName": "CPV by Count",
+      "queryLines": [
+        "SELECT\n",
+        "  CASE\n",
+        "    WHEN s.cpv_division = '45' THEN 'Construction'\n",
+        "    WHEN s.cpv_division = '71' THEN 'Engineering Services'\n",
+        "    WHEN s.cpv_division = '72' THEN 'IT Services'\n",
+        "    WHEN s.cpv_division = '79' THEN 'Business Services'\n",
+        "    WHEN s.cpv_division = '30' THEN 'Office & Computing'\n",
+        "    WHEN s.cpv_division = '33' THEN 'Medical Equipment'\n",
+        "    WHEN s.cpv_division = '34' THEN 'Transport Equipment'\n",
+        "    WHEN s.cpv_division = '50' THEN 'Repair & Maintenance'\n",
+        "    WHEN s.cpv_division = '60' THEN 'Transport Services'\n",
+        "    WHEN s.cpv_division = '80' THEN 'Education & Training'\n",
+        "    WHEN s.cpv_division = '85' THEN 'Health & Social Services'\n",
+        "    WHEN s.cpv_division = '90' THEN 'Waste & Cleaning'\n",
+        "    WHEN s.cpv_division = '09' THEN 'Energy & Utilities'\n",
+        "    WHEN s.cpv_division = '15' THEN 'Food & Beverages'\n",
+        "    WHEN s.cpv_division = '18' THEN 'Clothing & Textiles'\n",
+        "    WHEN s.cpv_division = '22' THEN 'Printed Materials'\n",
+        "    WHEN s.cpv_division = '24' THEN 'Chemicals'\n",
+        "    WHEN s.cpv_division = '39' THEN 'Furniture'\n",
+        "    WHEN s.cpv_division = '48' THEN 'Software'\n",
+        "    WHEN s.cpv_division = '55' THEN 'Hotel & Catering'\n",
+        "    WHEN s.cpv_division = '63' THEN 'Travel & Logistics'\n",
+        "    WHEN s.cpv_division = '64' THEN 'Postal Services'\n",
+        "    WHEN s.cpv_division = '66' THEN 'Financial Services'\n",
+        "    WHEN s.cpv_division = '70' THEN 'Real Estate'\n",
+        "    WHEN s.cpv_division = '73' THEN 'Research Services'\n",
+        "    WHEN s.cpv_division = '75' THEN 'Administration'\n",
+        "    WHEN s.cpv_division = '76' THEN 'Oil & Gas'\n",
+        "    WHEN s.cpv_division = '77' THEN 'Agricultural Services'\n",
+        "    WHEN s.cpv_division = '92' THEN 'Recreation & Culture'\n",
+        "    ELSE d.cpv_label\n",
+        "  END as sector_name,\n",
+        "  s.contract_count\n",
+        "FROM\n",
+        "  workspace.gold.cpv_summary s\n",
+        "    LEFT JOIN workspace.gold.dim_cpv d\n",
+        "      ON s.cpv_division = d.cpv_division\n",
+        "ORDER BY\n",
+        "  s.contract_count DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "cpv_by_value",
+      "displayName": "CPV by Value",
+      "queryLines": [
+        "SELECT\n",
+        "  CASE\n",
+        "    WHEN s.cpv_division = '45' THEN 'Construction'\n",
+        "    WHEN s.cpv_division = '71' THEN 'Engineering Services'\n",
+        "    WHEN s.cpv_division = '72' THEN 'IT Services'\n",
+        "    WHEN s.cpv_division = '79' THEN 'Business Services'\n",
+        "    WHEN s.cpv_division = '30' THEN 'Office & Computing'\n",
+        "    WHEN s.cpv_division = '33' THEN 'Medical Equipment'\n",
+        "    WHEN s.cpv_division = '34' THEN 'Transport Equipment'\n",
+        "    WHEN s.cpv_division = '50' THEN 'Repair & Maintenance'\n",
+        "    WHEN s.cpv_division = '60' THEN 'Transport Services'\n",
+        "    WHEN s.cpv_division = '80' THEN 'Education & Training'\n",
+        "    WHEN s.cpv_division = '85' THEN 'Health & Social Services'\n",
+        "    WHEN s.cpv_division = '90' THEN 'Waste & Cleaning'\n",
+        "    WHEN s.cpv_division = '09' THEN 'Energy & Utilities'\n",
+        "    WHEN s.cpv_division = '15' THEN 'Food & Beverages'\n",
+        "    WHEN s.cpv_division = '18' THEN 'Clothing & Textiles'\n",
+        "    WHEN s.cpv_division = '22' THEN 'Printed Materials'\n",
+        "    WHEN s.cpv_division = '24' THEN 'Chemicals'\n",
+        "    WHEN s.cpv_division = '39' THEN 'Furniture'\n",
+        "    WHEN s.cpv_division = '48' THEN 'Software'\n",
+        "    WHEN s.cpv_division = '55' THEN 'Hotel & Catering'\n",
+        "    WHEN s.cpv_division = '63' THEN 'Travel & Logistics'\n",
+        "    WHEN s.cpv_division = '64' THEN 'Postal Services'\n",
+        "    WHEN s.cpv_division = '66' THEN 'Financial Services'\n",
+        "    WHEN s.cpv_division = '70' THEN 'Real Estate'\n",
+        "    WHEN s.cpv_division = '73' THEN 'Research Services'\n",
+        "    WHEN s.cpv_division = '75' THEN 'Administration'\n",
+        "    WHEN s.cpv_division = '76' THEN 'Oil & Gas'\n",
+        "    WHEN s.cpv_division = '77' THEN 'Agricultural Services'\n",
+        "    WHEN s.cpv_division = '92' THEN 'Recreation & Culture'\n",
+        "    ELSE d.cpv_label\n",
+        "  END as sector_name,\n",
+        "  s.total_award_value_eur as total_value\n",
+        "FROM\n",
+        "  workspace.gold.cpv_summary s\n",
+        "    LEFT JOIN workspace.gold.dim_cpv d\n",
+        "      ON s.cpv_division = d.cpv_division\n",
+        "ORDER BY\n",
+        "  s.total_award_value_eur DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "award_size_distribution",
+      "displayName": "Award Size Distribution (Binned)",
+      "queryLines": [
+        "WITH bins AS (\n",
+        "  SELECT\n",
+        "    CASE\n",
+        "      WHEN award_value_eur <= 50000 THEN 1\n",
+        "      WHEN award_value_eur <= 100000 THEN 2\n",
+        "      WHEN award_value_eur <= 250000 THEN 3\n",
+        "      WHEN award_value_eur <= 500000 THEN 4\n",
+        "      WHEN award_value_eur <= 750000 THEN 5\n",
+        "      WHEN award_value_eur <= 1000000 THEN 6\n",
+        "      WHEN award_value_eur <= 2000000 THEN 7\n",
+        "      WHEN award_value_eur <= 3000000 THEN 8\n",
+        "      WHEN award_value_eur <= 5000000 THEN 9\n",
+        "      WHEN award_value_eur <= 7500000 THEN 10\n",
+        "      WHEN award_value_eur <= 10000000 THEN 11\n",
+        "      WHEN award_value_eur <= 15000000 THEN 12\n",
+        "      WHEN award_value_eur <= 25000000 THEN 13\n",
+        "      WHEN award_value_eur <= 50000000 THEN 14\n",
+        "      WHEN award_value_eur <= 100000000 THEN 15\n",
+        "      ELSE 16\n",
+        "    END as bin_order,\n",
+        "    CASE\n",
+        "      WHEN award_value_eur <= 50000 THEN '\u20ac0\u2013\u20ac50K'\n",
+        "      WHEN award_value_eur <= 100000 THEN '\u20ac50K\u2013\u20ac100K'\n",
+        "      WHEN award_value_eur <= 250000 THEN '\u20ac100K\u2013\u20ac250K'\n",
+        "      WHEN award_value_eur <= 500000 THEN '\u20ac250K\u2013\u20ac500K'\n",
+        "      WHEN award_value_eur <= 750000 THEN '\u20ac500K\u2013\u20ac750K'\n",
+        "      WHEN award_value_eur <= 1000000 THEN '\u20ac750K\u2013\u20ac1M'\n",
+        "      WHEN award_value_eur <= 2000000 THEN '\u20ac1M\u2013\u20ac2M'\n",
+        "      WHEN award_value_eur <= 3000000 THEN '\u20ac2M\u2013\u20ac3M'\n",
+        "      WHEN award_value_eur <= 5000000 THEN '\u20ac3M\u2013\u20ac5M'\n",
+        "      WHEN award_value_eur <= 7500000 THEN '\u20ac5M\u2013\u20ac7.5M'\n",
+        "      WHEN award_value_eur <= 10000000 THEN '\u20ac7.5M\u2013\u20ac10M'\n",
+        "      WHEN award_value_eur <= 15000000 THEN '\u20ac10M\u2013\u20ac15M'\n",
+        "      WHEN award_value_eur <= 25000000 THEN '\u20ac15M\u2013\u20ac25M'\n",
+        "      WHEN award_value_eur <= 50000000 THEN '\u20ac25M\u2013\u20ac50M'\n",
+        "      WHEN award_value_eur <= 100000000 THEN '\u20ac50M\u2013\u20ac100M'\n",
+        "      ELSE '\u20ac100M+'\n",
+        "    END as bin_label,\n",
+        "    CASE\n",
+        "      WHEN award_value_eur <= 50000 THEN 25000\n",
+        "      WHEN award_value_eur <= 100000 THEN 75000\n",
+        "      WHEN award_value_eur <= 250000 THEN 175000\n",
+        "      WHEN award_value_eur <= 500000 THEN 375000\n",
+        "      WHEN award_value_eur <= 750000 THEN 625000\n",
+        "      WHEN award_value_eur <= 1000000 THEN 875000\n",
+        "      WHEN award_value_eur <= 2000000 THEN 1500000\n",
+        "      WHEN award_value_eur <= 3000000 THEN 2500000\n",
+        "      WHEN award_value_eur <= 5000000 THEN 4000000\n",
+        "      WHEN award_value_eur <= 7500000 THEN 6250000\n",
+        "      WHEN award_value_eur <= 10000000 THEN 8750000\n",
+        "      WHEN award_value_eur <= 15000000 THEN 12500000\n",
+        "      WHEN award_value_eur <= 25000000 THEN 20000000\n",
+        "      WHEN award_value_eur <= 50000000 THEN 37500000\n",
+        "      WHEN award_value_eur <= 100000000 THEN 75000000\n",
+        "      ELSE 100000000\n",
+        "    END as bin_midpoint\n",
+        "  FROM\n",
+        "    workspace.gold.awards_analysis\n",
+        "  WHERE\n",
+        "    award_value_eur IS NOT NULL\n",
+        "    AND award_value_eur > 0\n",
+        ")\n",
+        "SELECT\n",
+        "  bin_order,\n",
+        "  bin_label,\n",
+        "  bin_midpoint,\n",
+        "  COUNT(*) as award_count\n",
+        "FROM\n",
+        "  bins\n",
+        "GROUP BY\n",
+        "  bin_order,\n",
+        "  bin_label,\n",
+        "  bin_midpoint\n",
+        "ORDER BY\n",
+        "  bin_order"
+      ]
+    },
+    {
+      "name": "award_kpis",
+      "displayName": "Award Summary KPIs",
+      "queryLines": [
+        "SELECT\n",
+        "  COUNT(*) as total_awards,\n",
+        "  SUM(award_value_eur) as total_value,\n",
+        "  AVG(award_value_eur) as avg_value,\n",
+        "  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY award_value_eur) as median_value,\n",
+        "  MAX(award_value_eur) as largest_award\n",
+        "FROM\n",
+        "  workspace.gold.awards_analysis\n",
+        "WHERE\n",
+        "  award_value_eur IS NOT NULL"
+      ]
+    },
+    {
+      "name": "buyer_concentration",
+      "displayName": "Buyer Concentration Analysis",
+      "queryLines": [
+        "SELECT\n",
+        "  CASE\n",
+        "    WHEN LENGTH(buyer_name) <= 50 THEN buyer_name\n",
+        "    ELSE CONCAT(SUBSTRING(buyer_name, 1, 47), '...')\n",
+        "  END as buyer_name,\n",
+        "  SUM(award_value_eur) as total_value,\n",
+        "  COUNT(*) as award_count,\n",
+        "  AVG(award_value_eur) as avg_award_value\n",
+        "FROM\n",
+        "  workspace.gold.awards_analysis\n",
+        "WHERE\n",
+        "  award_value_eur IS NOT NULL\n",
+        "GROUP BY\n",
+        "  buyer_name\n",
+        "ORDER BY\n",
+        "  total_value DESC\n",
+        "LIMIT 15"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "c225175e",
+      "displayName": "Overview & Activity",
+      "layout": [
+        {
+          "widget": {
+            "name": "total_notices_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "executive_kpis",
+                  "fields": [
+                    {
+                      "name": "total_notices",
+                      "expression": "`total_notices`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Notices",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_notices"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "contract_notices_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "executive_kpis",
+                  "fields": [
+                    {
+                      "name": "contract_notices",
+                      "expression": "`contract_notices`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Contract Notices",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "contract_notices"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "award_notices_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "executive_kpis",
+                  "fields": [
+                    {
+                      "name": "award_notices",
+                      "expression": "`award_notices`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Award Notices",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "award_notices"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "total_value_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "executive_kpis",
+                  "fields": [
+                    {
+                      "name": "total_estimated_value",
+                      "expression": "`total_estimated_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Estimated Value \n(EUR)",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_estimated_value"
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "daily_notice_trends",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "daily_trends",
+                  "fields": [
+                    {
+                      "name": "activity_date",
+                      "expression": "`activity_date`"
+                    },
+                    {
+                      "name": "total_notices",
+                      "expression": "`total_notices`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Daily Notice Activity Shows Cyclical Pattern",
+                "showTitle": true
+              },
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "activity_date",
+                  "axis": {
+                    "hideGrid": true
+                  },
+                  "displayName": "Activity Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "total_notices",
+                  "displayName": "Total Notices",
+                  "scale": {
+                    "type": "quantitative",
+                    "domain": {
+                      "max": 3000
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "daily_value_trends",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "daily_trends",
+                  "fields": [
+                    {
+                      "name": "activity_date",
+                      "expression": "`activity_date`"
+                    },
+                    {
+                      "name": "total_award_value_eur",
+                      "expression": "`total_award_value_eur`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Daily Award Value Spiked in May ",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  "#2563eb",
+                  "#f59e0b",
+                  "#10b981",
+                  "#ef4444",
+                  "#8b5cf6",
+                  "#ec4899",
+                  "#14b8a6",
+                  "#f97316",
+                  "#06b6d4"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "activity_date",
+                  "axis": {
+                    "hideGrid": true
+                  },
+                  "displayName": "Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "total_award_value_eur",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "EUR",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "displayName": "Total Award Value (EUR)",
+                  "scale": {
+                    "type": "quantitative",
+                    "domain": {
+                      "max": 7000000000
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "buyer_cpv",
+      "displayName": "Buyer & CPV Analysis",
+      "layout": [
+        {
+          "widget": {
+            "name": "country_value_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "buyers_by_country",
+                  "fields": [
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    },
+                    {
+                      "name": "buyer_country",
+                      "expression": "`buyer_country`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "frame": {
+                "title": "Spending is Concentrated in France and Italy",
+                "showTitle": true
+              },
+              "widgetType": "choropleth-map",
+              "encodings": {
+                "color": {
+                  "fieldName": "total_value",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "EUR",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "legend": {
+                    "hide": true
+                  },
+                  "displayName": "Total Procurement Value",
+                  "scale": {
+                    "type": "quantitative",
+                    "colorRamp": {
+                      "mode": "scheme",
+                      "scheme": "blues"
+                    }
+                  }
+                },
+                "extra": [
+                  {
+                    "fieldName": "total_value",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "EUR",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 1
+                      }
+                    },
+                    "displayName": "Value"
+                  }
+                ],
+                "region": {
+                  "regionType": "mapbox-v4-admin",
+                  "admin0": {
+                    "fieldName": "buyer_country",
+                    "type": "field",
+                    "geographicRole": "admin0-iso-3166-1-alpha-3"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 0,
+            "width": 11,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "cpv_by_value_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cpv_by_value",
+                  "fields": [
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    },
+                    {
+                      "name": "sector_name",
+                      "expression": "`sector_name`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Construction and Public Utilities \nReceive the Most Spending",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_value",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "EUR",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true
+                  },
+                  "displayName": "Total Award Value",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "sector_name",
+                  "displayName": "Sector",
+                  "scale": {
+                    "type": "categorical",
+                    "categorySize": {
+                      "type": "number-of-categories",
+                      "number": 5
+                    },
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 6,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "cpv_by_count_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cpv_by_count",
+                  "fields": [
+                    {
+                      "name": "contract_count",
+                      "expression": "`contract_count`"
+                    },
+                    {
+                      "name": "sector_name",
+                      "expression": "`sector_name`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Construction and Medical Equipment \nHave the Most Contracts",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "contract_count",
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true
+                  },
+                  "displayName": "Contract Count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "sector_name",
+                  "displayName": "Sector",
+                  "scale": {
+                    "type": "categorical",
+                    "categorySize": {
+                      "type": "number-of-categories",
+                      "number": 5
+                    },
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 6,
+            "width": 5,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "cpv_detail_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cpv_categories",
+                  "fields": [
+                    {
+                      "name": "sector_name",
+                      "expression": "`sector_name`"
+                    },
+                    {
+                      "name": "contract_count",
+                      "expression": "`contract_count`"
+                    },
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    },
+                    {
+                      "name": "distinct_buyers",
+                      "expression": "`distinct_buyers`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "CPV Category Drill Down",
+                "showTitle": true
+              },
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "sector_name",
+                    "useForSearch": true,
+                    "displayName": "Sector Name"
+                  },
+                  {
+                    "fieldName": "contract_count",
+                    "displayName": "Contract Count"
+                  },
+                  {
+                    "fieldName": "total_value",
+                    "displayName": "Total Value"
+                  },
+                  {
+                    "fieldName": "distinct_buyers",
+                    "displayName": "Distinct Buyers"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "awards_opps",
+      "displayName": "Awards & Opportunities",
+      "layout": [
+        {
+          "widget": {
+            "name": "total_awards_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "award_kpis",
+                  "fields": [
+                    {
+                      "name": "total_awards",
+                      "expression": "`total_awards`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Awards",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_awards",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "total_value_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "award_kpis",
+                  "fields": [
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Award Value",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_value",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "EUR",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "median_value_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "award_kpis",
+                  "fields": [
+                    {
+                      "name": "median_value",
+                      "expression": "`median_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Median Award",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "median_value",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "EUR",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "largest_award_counter",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "award_kpis",
+                  "fields": [
+                    {
+                      "name": "largest_award",
+                      "expression": "`largest_award`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Largest Award",
+                "showTitle": true
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "largest_award",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "EUR",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "buyer_concentration_chart",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "buyer_concentration",
+                  "fields": [
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    },
+                    {
+                      "name": "buyer_name",
+                      "expression": "`buyer_name`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "The Biggest Spenders are French, Italian and Spanish Buyers",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  "#2563eb"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_value",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "EUR",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "axis": {
+                    "hideGrid": true,
+                    "hideLabels": true
+                  },
+                  "displayName": "Total Award Value",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "buyer_name",
+                  "displayName": "Buyer",
+                  "scale": {
+                    "type": "categorical",
+                    "categorySize": {
+                      "type": "number-of-categories",
+                      "number": 6
+                    },
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "procedure_competition_pie",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "awards_by_procedure",
+                  "fields": [
+                    {
+                      "name": "total_value",
+                      "expression": "`total_value`"
+                    },
+                    {
+                      "name": "procedure_type",
+                      "expression": "`procedure_type`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Award Spending is Concentrated in \nOpen Procurement procedures",
+                "showTitle": true
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "total_value",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "EUR",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Total Value"
+                },
+                "color": {
+                  "fieldName": "procedure_type",
+                  "displayName": "Procedure Type",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 9,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "opportunities_table",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "high_value_awards",
+                  "fields": [
+                    {
+                      "name": "buyer_name",
+                      "expression": "`buyer_name`"
+                    },
+                    {
+                      "name": "project_title",
+                      "expression": "`project_title`"
+                    },
+                    {
+                      "name": "award_value_eur",
+                      "expression": "`award_value_eur`"
+                    },
+                    {
+                      "name": "buyer_country",
+                      "expression": "`buyer_country`"
+                    },
+                    {
+                      "name": "publication_date",
+                      "expression": "`publication_date`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "title": "High-Value Opportunities",
+                "showTitle": true
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "buyer_name",
+                    "useForSearch": true,
+                    "displayName": "Buyer"
+                  },
+                  {
+                    "fieldName": "project_title",
+                    "useForSearch": true,
+                    "displayName": "Project"
+                  },
+                  {
+                    "fieldName": "award_value_eur",
+                    "format": {
+                      "type": "number-currency",
+                      "currencyCode": "EUR",
+                      "abbreviation": "compact",
+                      "decimalPlaces": {
+                        "type": "exact",
+                        "places": 0
+                      }
+                    },
+                    "displayName": "Value (EUR)"
+                  },
+                  {
+                    "fieldName": "buyer_country",
+                    "useForSearch": true,
+                    "displayName": "Country"
+                  },
+                  {
+                    "fieldName": "publication_date",
+                    "format": {
+                      "type": "date",
+                      "date": "locale-short-month"
+                    },
+                    "displayName": "Date"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "contract_size_histogram",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "award_size_distribution",
+                  "fields": [
+                    {
+                      "name": "bin_label",
+                      "expression": "`bin_label`"
+                    },
+                    {
+                      "name": "award_count",
+                      "expression": "`award_count`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Most Procurement Awards are Under \u20ac250K",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  "#2563eb"
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "bin_label",
+                  "axis": {
+                    "labelAngle": 45
+                  },
+                  "displayName": "Award Value",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "natural-order"
+                    }
+                  }
+                },
+                "y": {
+                  "fieldName": "award_count",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    }
+                  },
+                  "displayName": "Number of Awards",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
