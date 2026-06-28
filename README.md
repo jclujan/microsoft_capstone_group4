@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Databricks](https://img.shields.io/badge/Platform-Databricks-red) ![XGBoost](https://img.shields.io/badge/ML-XGBoost-orange) ![Streamlit](https://img.shields.io/badge/App-Streamlit-brightgreen) ![Status](https://img.shields.io/badge/Status-Complete-success)
 
-A three-component intelligence system that surfaces actionable EU public procurement signals for Microsoft's public sector sales team — before competitors act on them.
+A four-component intelligence system that surfaces actionable EU public procurement signals for Microsoft's public sector sales team — before competitors act on them.
 
 ---
 
@@ -17,12 +17,13 @@ A three-component intelligence system that surfaces actionable EU public procure
 5. [Component 1 — Single-Bidder Classifier](#5-component-1--single-bidder-classifier)
 6. [Component 2 — Buyer Segmentation](#6-component-2--buyer-segmentation)
 7. [Component 3 — Bid Prioritization Assistant](#7-component-3--bid-prioritization-assistant)
-8. [Data Model](#8-data-model)
-9. [Results & Key Findings](#9-results--key-findings)
-10. [Known Limitations](#10-known-limitations)
-11. [Technology Stack](#11-technology-stack)
-12. [Team & Credits](#12-team--credits)
-13. [References](#13-references)
+8. [Component 4 — Procurement Analytics Dashboard](#8-component-4--procurement-analytics-dashboard)
+9. [Data Model](#9-data-model)
+10. [Results & Key Findings](#10-results--key-findings)
+11. [Known Limitations](#11-known-limitations)
+12. [Technology Stack](#12-technology-stack)
+13. [Team & Credits](#13-team--credits)
+14. [References](#14-references)
 
 ---
 
@@ -281,7 +282,46 @@ opportunity_score = sum(component * WEIGHTS[k] for k, component in kpi.items())
 
 ---
 
-## 8. Data Model
+## 8. Component 4 — Procurement Analytics Dashboard
+
+### What it does
+
+A Databricks Lakeview dashboard ([Analytics/Procurement Analytics Dashboard.lvdash.json](Analytics/Procurement%20Analytics%20Dashboard.lvdash.json)) that provides executive-level visibility into EU procurement activity. While the Bid Prioritization Assistant is designed for individual opportunity screening, this dashboard gives a market-wide view — total volume, spend trends, sector breakdown, and top awards — for strategic reporting and management review.
+
+### Views
+
+| Dataset | Description |
+|---|---|
+| Executive KPIs | Total notices, open vs. awarded split, total estimated contract value |
+| Daily Trends | Award value and notice volume over time (from May 2026 onward) |
+| Buyers by Country | Buyer count, notice volume, and total spend ranked by country |
+| CPV Categories | Top 20 sectors by contract value and by notice count |
+| High Value Awards | Top 20 awarded contracts by value with buyer name, title, and country |
+| Awards by Procedure | Procedure-type breakdown — count, total value, average value |
+
+### Data sources
+
+All queries run against the Gold layer in Unity Catalog:
+
+| Table | Role in dashboard |
+|---|---|
+| `workspace.gold.daily_activity` | Executive KPIs and daily trend charts |
+| `workspace.gold.buyer_profiles` | Buyers by country aggregation |
+| `workspace.gold.cpv_summary` | Sector breakdown by count and value |
+| `workspace.gold.dim_cpv` | CPV code labels |
+| `workspace.gold.awards_analysis` | High-value awards and procedure-type views |
+
+### Deployment
+
+The `.lvdash.json` file is a native Databricks Lakeview definition. To deploy:
+1. Open the Databricks workspace and navigate to **Dashboards**
+2. Select **Import** and upload `Analytics/Procurement Analytics Dashboard.lvdash.json`
+3. Attach a SQL Warehouse with `Can use` permission
+4. Ensure the Gold tables above have `Can select` permissions for the dashboard service principal
+
+---
+
+## 9. Data Model
 
 ### Silver Layer
 
@@ -304,7 +344,7 @@ opportunity_score = sum(component * WEIGHTS[k] for k, component in kpi.items())
 
 ---
 
-## 9. Results & Key Findings
+## 10. Results & Key Findings
 
 ### Single-Bidder Classifier
 
@@ -328,7 +368,7 @@ opportunity_score = sum(component * WEIGHTS[k] for k, component in kpi.items())
 
 ---
 
-## 10. Known Limitations
+## 11. Known Limitations
 
 ### Single-Bidder Classifier
 - 30-day training window; no seasonality or multi-year trend captured
@@ -350,7 +390,7 @@ opportunity_score = sum(component * WEIGHTS[k] for k, component in kpi.items())
 
 ---
 
-## 11. Technology Stack
+## 12. Technology Stack
 
 | Component | Technology |
 |---|---|
@@ -368,7 +408,7 @@ opportunity_score = sum(component * WEIGHTS[k] for k, component in kpi.items())
 
 ---
 
-## 12. Team & Credits
+## 13. Team & Credits
 
 **Institution:** IE University, School of Science and Technology  
 **Program:** Master in Business Analytics & Data Science (MBDS)  
@@ -388,7 +428,7 @@ opportunity_score = sum(component * WEIGHTS[k] for k, component in kpi.items())
 
 ---
 
-## 13. References
+## 14. References
 
 - European Commission. (n.d.). *Access to public procurement*. Single Market Scoreboard. https://single-market-scoreboard.ec.europa.eu
 - Fazekas, M., & Kocsis, G. (2020). Uncovering high-level corruption: Cross-national objective corruption risk indicators using public procurement data. *British Journal of Political Science*, 50(1), 155–164.
