@@ -286,38 +286,82 @@ opportunity_score = sum(component * WEIGHTS[k] for k, component in kpi.items())
 
 ### What it does
 
-A Databricks Lakeview dashboard ([Analytics/Procurement Analytics Dashboard.lvdash.json](Analytics/Procurement%20Analytics%20Dashboard.lvdash.json)) that provides executive-level visibility into EU procurement activity. While the Bid Prioritization Assistant is designed for individual opportunity screening, this dashboard gives a market-wide view — total volume, spend trends, sector breakdown, and top awards — for strategic reporting and management review.
+The Procurement Analytics Dashboard provides an executive-level view of EU public procurement activity using business-ready Gold tables generated through the Databricks Medallion Architecture. While the Bid Prioritization Assistant is designed to evaluate individual procurement opportunities, the dashboard supports strategic analysis by visualising procurement volume, spending trends, buyer behaviour, sector activity, and award distributions across the European Union.
 
-### Views
+The dashboard was developed as a native **Databricks Lakeview Dashboard** and is stored in the repository under:
 
-| Dataset | Description |
+```text
+Analytics/
+├── Procurement Analytics Dashboard.lvdash.json
+└── PowerBI_Databricks_Rebuild_Package/
+```
+
+### Dashboard Methodology
+
+The dashboard follows a business intelligence workflow in which all visualisations query the Gold layer directly. Rather than performing calculations within the dashboard itself, all business logic, aggregations, and data validation are completed during the Gold layer transformation process. This ensures every visual is generated from a single, trusted source of truth while improving performance, simplifying maintenance, and maintaining consistency across analytical views.
+
+The dashboard is organised into three analytical pages:
+
+| Page | Purpose |
 |---|---|
-| Executive KPIs | Total notices, open vs. awarded split, total estimated contract value |
-| Daily Trends | Award value and notice volume over time (from May 2026 onward) |
-| Buyers by Country | Buyer count, notice volume, and total spend ranked by country |
-| CPV Categories | Top 20 sectors by contract value and by notice count |
-| High Value Awards | Top 20 awarded contracts by value with buyer name, title, and country |
-| Awards by Procedure | Procedure-type breakdown — count, total value, average value |
+| **Overview & Activity** | Executive KPIs, procurement volume, and award value trends over time |
+| **Buyer & CPV Analysis** | Geographic spending patterns, buyer activity, procurement sector analysis, and country-level spending |
+| **Awards & Opportunities** | Award distributions, procurement procedures, buyer concentration, and high-value contracts |
 
-### Data sources
+### Analytics Repository
 
-All queries run against the Gold layer in Unity Catalog:
+The `Analytics` directory contains all assets required to deploy the dashboard in Databricks or recreate it in Microsoft Power BI.
 
-| Table | Role in dashboard |
+| Folder / File | Description |
 |---|---|
-| `workspace.gold.daily_activity` | Executive KPIs and daily trend charts |
-| `workspace.gold.buyer_profiles` | Buyers by country aggregation |
-| `workspace.gold.cpv_summary` | Sector breakdown by count and value |
-| `workspace.gold.dim_cpv` | CPV code labels |
-| `workspace.gold.awards_analysis` | High-value awards and procedure-type views |
+| `Procurement Analytics Dashboard.lvdash.json` | Native Databricks Lakeview dashboard definition that can be imported directly into Databricks. |
+| `PowerBI_Databricks_Rebuild_Package/` | Complete Power BI reconstruction package generated from the Lakeview dashboard. |
+| `sql_queries/` | SQL queries extracted from each dashboard dataset. |
+| `VISUAL_MAPPING.md` | Mapping between Databricks Lakeview visuals and equivalent Power BI visuals. |
+| `PAGE_LAYOUT_GUIDE.md` | Dashboard page layouts and visual positioning. |
+| `DAX_MEASURES.md` | Suggested DAX measures for rebuilding KPI cards and calculations. |
+| `Procurement_Analytics_PowerBI_Theme.json` | Power BI theme matching the Databricks dashboard styling. |
+| `README.md` | Step-by-step instructions for recreating the dashboard in Power BI. |
+
+### Data Sources
+
+All dashboard visualisations query Gold-layer tables in Unity Catalog.
+
+| Table | Purpose |
+|---|---|
+| `workspace.gold.daily_activity` | Executive KPIs and procurement activity trends |
+| `workspace.gold.buyer_profiles` | Buyer aggregations by country |
+| `workspace.gold.cpv_summary` | Procurement sector summaries |
+| `workspace.gold.dim_cpv` | CPV code descriptions |
+| `workspace.gold.awards_analysis` | Award values, procedures, buyer concentration, and high-value awards |
 
 ### Deployment
 
-The `.lvdash.json` file is a native Databricks Lakeview definition. To deploy:
-1. Open the Databricks workspace and navigate to **Dashboards**
-2. Select **Import** and upload `Analytics/Procurement Analytics Dashboard.lvdash.json`
-3. Attach a SQL Warehouse with `Can use` permission
-4. Ensure the Gold tables above have `Can select` permissions for the dashboard service principal
+#### Databricks Lakeview
+
+1. Open **Dashboards** in Databricks.
+2. Import `Analytics/Procurement Analytics Dashboard.lvdash.json`.
+3. Attach a SQL Warehouse with **Can use** permissions.
+4. Ensure the required Gold tables have **Can select** permissions.
+
+#### Microsoft Power BI
+
+The repository also includes a Power BI reconstruction package located in:
+
+```text
+Analytics/PowerBI_Databricks_Rebuild_Package/
+```
+
+This package contains:
+
+- SQL queries extracted from the dashboard
+- Visual mapping documentation
+- Page layout specifications
+- Recommended DAX measures
+- Power BI theme file
+- Step-by-step rebuild instructions
+
+These resources allow the dashboard to be recreated in Microsoft Power BI while preserving the original analytical methodology and using the same Databricks Gold tables as the data source.
 
 ---
 
